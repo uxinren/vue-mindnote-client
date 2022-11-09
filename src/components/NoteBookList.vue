@@ -1,13 +1,13 @@
 <template>
   <div id="notebook-list" class="detail">
     <header>
-      <a href="#" class="btn" @click.prevent="onCreate"><i class="iconfont icon-plus"></i>新建笔记本</a>
+      <a class="btn" href="#" @click.prevent="onCreate"><i class="iconfont icon-plus"></i>新建笔记本</a>
     </header>
     <main>
       <div class="layout">
         <h3>笔记本({{ notebooks.length }})</h3>
         <div class="book-list">
-          <router-link v-for="notebook in notebooks" :key="notebook.id" to="/note/1" class="notebook">
+          <router-link v-for="notebook in notebooks" :key="notebook.id" :to="`/note?notebookId=${notebook.id}`" class="notebook">
             <div class="notebook-left">
               <span class="iconfont icon-notebook"></span>{{ notebook.title }}
               <span>{{ notebook.noteCounts }}</span>
@@ -27,17 +27,16 @@
 
 <script>
 import Auth from "@/apis/auth";
-import Notebooks from "@/apis/notebooks.js";
+import Notebooks from "@/apis/notebooks";
 import {friendlyDate} from "@/helpers/util";
+import {mapGetters, mapState} from "vuex";
 
-// window.Notebooks = Notebooks
 export default {
   name: 'NoteBookList',
   data() {
-    return {
-      notebooks: []
-    }
+    return {}
   },
+
   created() {
     Auth.getInfo()
         .then(res => {
@@ -45,10 +44,16 @@ export default {
             this.$router.push({path: '/login'})
           }
         })
-    Notebooks.getAll()
-        .then(res => {
-          this.notebooks = res.data
-        })
+    // Notebooks.getAll()
+    //     .then(res => {
+    //       this.notebooks = res.data
+    //     })
+    // console.log(Store)
+    // Store.dispatch('getNotebooks')
+    this.$store.dispatch('getNotebooks')
+  },
+  computed:{
+    ...mapState(['notebooks'])
   },
   methods: {
     onCreate() {
@@ -78,6 +83,11 @@ export default {
         return Notebooks.updateNotebook(notebook.id, { title })
       }).then(res => {
         notebook.title = title
+        this.notebooks.unshift(res.data)
+        this.notebooks.sort((notebook1, notebook2)=>{
+          return  notebook1.updatedAt < notebook2.updatedAt ? 1 : -1
+        })
+        this.$router.go(0)
         this.$message.success(res.msg)
       })
     },

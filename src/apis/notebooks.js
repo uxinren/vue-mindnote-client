@@ -27,6 +27,7 @@ export default {
     //传参：如果不传参数则为后面的值，如果传空对象则为前面默认值。
     updateNotebook(notebookId,{title=''}={title: ''}){
         return request(URL.UPDATE.replace(':id',notebookId),'PATCH',{title})
+
     },
     deleteNotebook(notebookId){
         return request(URL.DELETE.replace(':id',notebookId),'DELETE')

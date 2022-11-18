@@ -16,6 +16,7 @@ export default {
                     res.data = res.data.sort((notebook1, notebook2) =>
                         notebook1.updatedAt < notebook2.updatedAt ? 1 : -1)
                         res.data.forEach((notebook)=>{
+                            notebook.friendlyCreatedAt = friendlyDate(notebook.createdAt)
                             notebook.friendlyUpdatedAt = friendlyDate(notebook.updatedAt)
                         })
                     resolve(res)
@@ -33,6 +34,15 @@ export default {
         return request(URL.DELETE.replace(':id',notebookId),'DELETE')
     },
     addNotebook({title=''}={title:''}){
-        return request(URL.ADD,'POST',{title})
+        return new Promise((resolve, reject)=>{
+            request(URL.ADD,'POST',{title})
+                .then(res=>{
+                    res.data.friendlyCreatedAt = friendlyDate(res.data.createdAt)
+                    res.data.friendlyUpdatedAt = friendlyDate(res.data.updatedAt)
+                    resolve(res)
+                }).catch(err=>{
+                    reject(err)
+            })
+        })
     }
 }

@@ -38,8 +38,8 @@ export default {
         return new Promise((resolve, reject)=>{
             request(URL.ADD.replace(':notebookId',notebookId),'POST',{title,content})
                 .then(res=>{
-                    res.data.note.createdAtFriendly = friendlyDate(res.data.note.createdAt)
-                    res.data.note.updatedAtFriendly = friendlyDate(res.data.note.updatedAt)
+                    res.data.friendlyCreatedAt = friendlyDate(res.data.createdAt)
+                    res.data.friendlyUpdatedAt = friendlyDate(res.data.updatedAt)
                     resolve(res)
                 }).catch(err=>{
                     reject(err)

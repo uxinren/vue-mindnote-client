@@ -29,7 +29,7 @@
 import Auth from "@/apis/auth";
 import Notebooks from "@/apis/notebooks";
 import {friendlyDate} from "@/helpers/util";
-import {mapGetters, mapState} from "vuex";
+import {mapGetters, mapState,mapActions} from "vuex";
 
 export default {
   name: 'NoteBookList',
@@ -38,24 +38,32 @@ export default {
   },
 
   created() {
-    Auth.getInfo()
-        .then(res => {
-          if (!res.isLogin) {
-            this.$router.push({path: '/login'})
-          }
-        })
+    this.checkLogin({path: '/login'})
+    // Auth.getInfo()
+    //     .then(res => {
+    //       if (!res.isLogin) {
+    //         this.$router.push({path: '/login'})
+    //       }
+    //     })
     // Notebooks.getAll()
     //     .then(res => {
     //       this.notebooks = res.data
     //     })
     // console.log(Store)
     // Store.dispatch('getNotebooks')
-    this.$store.dispatch('getNotebooks')
+    this.getNotebooks()
   },
   computed:{
-    ...mapState(['notebooks'])
+    ...mapGetters(['notebooks'])
   },
   methods: {
+    ...mapActions([
+        'getNotebooks',
+        'addNotebook',
+        'updateNotebook',
+        'deleteNotebook',
+        'checkLogin'
+    ]),
     onCreate() {
       this.$prompt('请输入笔记本标题', '创建笔记', {
         confirmButtonText: '确定',
@@ -63,12 +71,14 @@ export default {
         inputPattern: /^.{1,30}$/,
         inputErrorMessage: '笔记本标题不能为空,且不超过30个字符'
       }).then(({value}) => {
-        return Notebooks.addNotebook({title: value})
-      }).then(res => {
-        res.data.friendlyUpdatedAt = friendlyDate(res.data.updatedAt)
-        this.notebooks.unshift(res.data)
-        this.$message.success(res.msg)
+        this.addNotebook({title:value})
+        // return Notebooks.addNotebook({title: value})
       })
+      //     .then(res => {
+      //   res.data.friendlyUpdatedAt = friendlyDate(res.data.updatedAt)
+      //   this.notebooks.unshift(res.data)
+      //   this.$message.success(res.msg)
+      // })
     },
     onEdit(notebook) {
       let title = ''
@@ -80,16 +90,18 @@ export default {
         inputErrorMessage: '笔记本标题不能为空,且不超过30个字符'
       }).then(({value}) => {
         title = value
-        return Notebooks.updateNotebook(notebook.id, { title })
-      }).then(res => {
-        notebook.title = title
-        this.notebooks.unshift(res.data)
-        this.notebooks.sort((notebook1, notebook2)=>{
-          return  notebook1.updatedAt < notebook2.updatedAt ? 1 : -1
-        })
+        this.updateNotebook({notebookId:notebook.id, title:value })
         this.$router.go(0)
-        this.$message.success(res.msg)
       })
+      //     .then(res => {
+      //   notebook.title = title
+      //   this.notebooks.unshift(res.data)
+      //   this.notebooks.sort((notebook1, notebook2)=>{
+      //     return  notebook1.updatedAt < notebook2.updatedAt ? 1 : -1
+      //   })
+      //   this.$router.go(0)
+      //   this.$message.success(res.msg)
+      // })
     },
     onDelete(notebook) {
       this.$confirm('确认删除该笔记本吗?', '删除笔记本', {
@@ -97,11 +109,12 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        return Notebooks.deleteNotebook(notebook.id)
-      }).then(res => {
-        this.notebooks.splice(this.notebooks.indexOf(notebook), 1)
-        this.$message.success(res.msg)
+        this.deleteNotebook({notebookId:notebook.id})
       })
+      //     .then(res => {
+      //   this.notebooks.splice(this.notebooks.indexOf(notebook), 1)
+      //   this.$message.success(res.msg)
+      // })
     }
   }
 }

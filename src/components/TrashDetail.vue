@@ -1,32 +1,137 @@
 <template>
-  <div id="trash-detail">
-    <h1>{{msg}} : {{ $route.params.noteId }}</h1>
+  <div id="trash" class="detail">
+    <div class="note-sidebar">
+      <h3 class="notebook-title" >回收站</h3>
+      <div class="menu">
+        <div>更新时间</div>
+        <div>标题</div>
+      </div>
+      <ul class="notes">
+        <li v-for="note in trashNotes">
+          <router-link :to="`/trash?noteId=${note.id}`">
+            <span class="date">{{note.friendlyUpdatedAt?note.friendlyUpdatedAt:'刚刚'}}</span>
+            <span class="title">{{note.title?note.title:'标题未输入'}}</span>
+
+          </router-link>
+        </li>
+      </ul>
+    </div>
+      <div class="note-detail">
+          <div class="note-bar" v-if="true">
+            <span> 创建日期:{{ this.curTrashNote.friendlyCreatedAt }}</span>
+            <span> 更新日期: {{ this.curTrashNote.friendlyUpdatedAt }}</span>
+            <span> 所属笔记本: {{belongTo}}</span>
+            <a class="btn action" @click="onRevert">恢复</a>
+            <a class="btn action" @click="onDelete">彻底删除</a>
+          </div>
+          <div class="note-title">
+            <span>{{curTrashNote.title}}</span>
+          </div>
+           <div class="editor">
+          <div class="preview markdown-body" v-html="compiledMarkdown"></div>
+          </div>
+      </div>
   </div>
 </template>
 
 <script>
-import Auth from "@/apis/auth";
+import {mapGetters,mapMutations,mapActions} from 'vuex'
+import MarkdownIt from "markdown-it";
+
+let md = new MarkdownIt()
 export default {
-  name: 'TrashDetail',
   data () {
-    return {
-      msg: '回收站笔记详情页'
-    }
+    return {}
   },
   created() {
-    Auth.getInfo()
-        .then(res =>{
-          if (!res.isLogin){
-            this.$router.push({path:'/login'})
-          }
+    this.checkLogin({path:'/login'})
+    this.getNotebooks()
+    this.getTrashNotes()
+    .then(()=>{
+      this.setCurTrashNote({curTrashNoteId:this.$route.query.noteId})
+      if (!this.$route.query.noteId){
+        this.$router.replace({
+          path:'/trash',
+          query:{noteId:this.curTrashNote.id}
         })
+      }
+    })
+  },
+  computed:{
+    ...mapGetters([
+        'trashNotes',
+        'curTrashNote',
+        'belongTo'
+    ]),
+    compiledMarkdown(){
+      return md.render(this.curTrashNote.content || '')
+    }
+  },
+  methods:{
+    ...mapMutations([
+        'setCurTrashNote'
+    ]),
+    ...mapActions([
+        'checkLogin',
+        'deleteTrashNote',
+        'revertTrashNote',
+        'getTrashNotes',
+        'getNotebooks'
+    ]),
+    onDelete(){
+      this.$confirm('删除该笔记后无法恢复?', '确定删除笔记么', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.deleteTrashNote({noteId: this.curTrashNote.id})
+            .then(()=>{
+              this.setCurTrashNote()
+              this.$router.replace({
+                path:'/trash',
+                query:{noteId:this.curTrashNote.id}
+              })
+            })
+      })
+    },
+    onRevert(){
+      this.revertTrashNote({noteId: this.curTrashNote.id})
+      .then(()=>{
+        this.setCurTrashNote()
+        this.$router.replace({
+          path:'/trash',
+          query:{noteId:this.curTrashNote.id}
+        })
+      })
+    }
+  },
+  beforeRouteUpdate(to,from,next){
+    this.setCurTrashNote({curTrashNoteId:to.query.noteId})
+    next()
   }
 }
 </script>
 
-<style scoped>
-h1 {
-  color: blue;
+<style scoped lang="less">
+@import url(../assets/css/note-sidebar.less);
+@import url(../assets/css/note-detail.less);
+
+#trash {
+  display: flex;
+  align-items: stretch;
+  background-color: #fff;
+  flex: 1;
+
+  .note-bar {
+    .action {
+      float: right;
+      margin-left: 10px;
+      padding: 2px 4px;
+      font-size: 12px;
+
+    }
+  }
 }
+
 </style>
 

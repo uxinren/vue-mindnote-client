@@ -4,29 +4,38 @@
 
 <script>
 import Auth from '@/apis/auth';
-import Bus from'@/helpers/bus'
+import {mapGetters,mapActions} from 'vuex'
+import {methods} from "babel-plugin-transform-runtime/lib/definitions";
     export default {
     data() {
-        return {
-          username: '未登录',
-        }
+        return {}
       },
       created() {
       //监听用户名称
-      Bus.$on('userInfo',user=>{
-        this.username = user.username
-      })
-      Auth.getInfo()
-          .then(res => {
-          if (res.isLogin){
-            this.username = res.data.username
-          }
-      })
+      // Bus.$on('userInfo',user=>{
+      //   this.username = user.username
+      // })
+      // Auth.getInfo()
+      //     .then(res => {
+      //     if (res.isLogin){
+      //       this.username = res.data.username
+      //     }
+      // })
+        this.checkLogin()
+      },
+      methods:{
+      ...mapActions([
+          'checkLogin'
+      ])
       },
       computed: {
-      slug(){
-        return this.username.charAt(0)
-        }
+      ...mapGetters([
+         'username',
+         'slug'
+      ])
+      // slug(){
+      //   return this.username.charAt(0)
+      //   }
       }
   }
 </script>

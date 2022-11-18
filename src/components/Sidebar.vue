@@ -7,7 +7,7 @@
       <router-link to="/trash" title="回收站"><i class="iconfont icon-trash"></i></router-link>
     </div>
     <div class="logout">
-      <i class="iconfont icon-logout" @click="logout"></i>
+      <i class="iconfont icon-logout" @click="onLogout"></i>
     </div>
   </div>
 </template>
@@ -15,24 +15,26 @@
 <script>
 import Avatar from "./Avatar";
 import Auth from "@/apis/auth.js";
+import {mapActions} from 'vuex'
 export default {
   components: {Avatar},
   methods:{
-    logout(){
-      Auth.logout()
-      .then(data => {
-        this.$router.push({path: '/login'})
-      })
+    ...mapActions([
+        'logout'
+    ]),
+    onLogout(){
+      this.logout({path:'/login'})
     }
+    // logout(){
+    //   Auth.logout()
+    //   .then(data => {
+    //     this.$router.push({path: '/login'})
+    //   })
+    // }
   },
-  created() {
-    Auth.getInfo()
-        .then(res =>{
-          if (!res.isLogin){
-            this.$router.push({path:'/login'})
-          }
-        })
-  }
+  // created() {
+  //   this.checkLogin({path:'/login'})
+  // }
 }
 </script>
 
